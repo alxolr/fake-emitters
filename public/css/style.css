@@ -1,0 +1,40 @@
+#mapcontainer {
+  clear: both;
+  position: relative;
+}
+
+.mapcell {
+  position: absolute;
+  display: block;
+  width: 28px;
+  height: 28px;
+  border: 1px black solid;
+  z-index: 1;
+}
+
+.mapBeacon {
+  position: absolute;
+  display: block;
+  width: 3px;
+  height: 3px;
+  border: 1px black solid;
+  z-index: 2;
+  background-color: red;
+}
+
+.mapcell:hover {
+  background-color: #faa;
+}
+
+.passive {
+  background-color: #ccc;
+}
+
+.active {
+  background-color: #faa;
+}
+
+#distances {
+  position: absolute;
+  top: 270px;
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>{{ title }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <h1>Output data:</h1>
+  <div id="informer"></div>
+  <div id="data"></div>
+  <script type="text/javascript">
+    const host = location.origin.replace(/^http/, 'ws')
+    const socket = new WebSocket(host);
+    const informer = document.querySelector('#informer');
+    const data = document.querySelector('#data');
+
+    socket.addEventListener('open', () => {
+      informer.innerHTML = "Connected to the sockets";
+    });
+
+    socket.addEventListener('message', (message) => {
+      data.innerHTML = message.data;
+    });
+  </script>
+</body>
+
+</html>

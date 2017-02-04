@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>{{ title }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div id="mapcontainer">
+
+  </div>
+  <div id="distances"> </div>
+
+  <script type="text/javascript">
+    var host = location.origin.replace(/^http/, 'ws')
+    var ws = new WebSocket(host);
+    let interval = null;
+
+    $(document).ready(function () {
+      var coordinates = [
+        //cell 1
+        { "25": "0" },
+        { "25": "25" },
+        { "25": "50" },
+        { "25": "75" },
+        //cell 2
+        { "25": "100" },
+        { "25": "125" },
+        { "25": "150" },
+        { "25": "175" },
+        //cell 3
+        { "125": "0" },
+        { "125": "25" },
+        { "125": "50" },
+        { "125": "75" },
+        //cell 4 
+        { "225": "0" },
+        { "225": "25" },
+        { "225": "50" },
+        { "225": "75" },
+        //cell 5
+        { "325": "0" },
+        { "325": "25" },
+        { "325": "50" },
+        { "325": "75" },
+        //cell 6
+        { "325": "100" },
+        { "325": "125" },
+        { "325": "150" },
+        { "325": "175" },
+      ];
+
+      var beaconsPositions = [
+        { "position": { "25": "50" }, "name": "beacon1", "txPower": "65" },
+        { "position": { "125": "200" }, "name": "beacon1", "txPower": "75" },
+        { "position": { "175": "0" }, "name": "beacon1", "txPower": "85" }
+      ];
+
+
+      var colorIteration = 0;
+      for (var cell in coordinates) {
+        var coordinatesCell = coordinates[cell];
+
+
+        if (colorIteration == 4) {
+          colorIteration = 0;
+        }
+
+        if (colorIteration == 0) {
+          var color = getRandomColor();
+        }
+
+
+        colorIteration++;
+
+        for (var x in coordinatesCell) {
+          var iterator;
+          var left = parseInt(x);
+          for (iterator = 0; iterator < 4; iterator++) {
+
+            var cellX = (left - 12.5) / 50;
+            var cellY = (parseInt(coordinatesCell[x]) + 12.5) / 50;
+            $("#mapcontainer").append('<div id="cell8" cellX="' + cellX + '" cellY="' + cellY + '" class="mapcell passive" style="border-color:' + color + ';left: ' + left + 'px; top: ' + coordinatesCell[x] + 'px;"></div>')
+            left += 25;
+          }
+        }
+      }
+
+      for (beaconX in beaconsPositions) {
+        var beacon = beaconsPositions[beaconX];
+        var beaconPosition = beacon["position"];
+        var beaconName = beacon["name"];
+        var beaconFrequency = beacon["frequency"];
+        var x = Object.keys(beaconPosition);
+        var y = beaconPosition[x];
+
+        $("#mapcontainer").append('<div class="mapBeacon" style="left: ' + x + 'px; top: ' + y + 'px;"></div>')
+      }
+
+
+
+      function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
+
+
+      $(".mapcell").on("click", function () {
+        if (interval) {
+          clearInterval(interval);
+        }
+        cellX = $(this).attr("cellX");
+        cellY = $(this).attr("cellY");
+
+        $("#distances").empty();
+        var nr = 0;
+
+        const payload = [];
+
+        for (var beaconX in beaconsPositions) {
+          var beacon = beaconsPositions[beaconX];
+          var beaconPosition = beacon["position"];
+          var beaconName = beacon["name"];
+          var beaconTxPower = beacon["txPower"];
+          var x = Object.keys(beaconPosition);
+          var y = beaconPosition[x];
+
+
+          nr++;
+          var distance1 = 0;
+          var distance2 = 0;
+
+          x = ((parseInt(x)) / 50) - 0.5;
+          y = (parseInt(y)) / 50;
+
+          if (cellX > x) {
+            var distance1 = cellX - x;
+          } else {
+            var distance1 = x - cellX;
+          }
+
+          if (cellY > y) {
+            var distance2 = cellY - y;
+          } else {
+            var distance2 = y - cellY;
+          }
+
+          if (distance1 != 0 && distance2 != 0) {
+            distance = Math.sqrt((distance1 * distance1) + (distance2 * distance2));
+
+            //calculate rss and frequancy
+            var rssi = - (((Math.log(distance) / Math.log(beaconTxPower)) - 3.25) * 20);
+            payload.push({
+              beacon: nr,
+              rssi,
+              txPower: beaconTxPower
+            });
+            $("#distances").append("beacon " + nr + " :  rssi: " + rssi + ", txPower: " + beaconTxPower + "<br />");
+          }
+        }
+
+        interval = setInterval(() => {
+          console.log(payload);
+          ws.send(JSON.stringify(payload));
+        }, {{ interval }})
+      });
+    })
+  </script>
+</body>
+
+</html>
